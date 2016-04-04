@@ -1,13 +1,16 @@
-.regions {
-    fill: #FFF;
-    stroke: #CCC;
+.countries {
+    fill: black;
+    stroke: white;
     stroke-width: .5px;
 }
 
 .gratLines{
+    stroke: gray;
+    stroke-width: .25px;
+}
+
+.gratBackground {
     fill: #9AC0CD;
-    stroke: white;
-    stroke-width: 0px;
 }
 
 .map {
