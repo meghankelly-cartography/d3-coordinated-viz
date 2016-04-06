@@ -47,8 +47,11 @@ function setMap(){
        	//join csv data to GeoJSON enumeration units
        	worldCountries = joinData(worldCountries, csvData);
 
+        //create the color scale
+        var colorScale = makeColorScale(csvData);
+        
         //add enumeration units to the map
-        setEnumerationUnits(worldCountries, map, path);
+        setEnumerationUnits(worldCountries, map, path, colorScale);
         
     };
 }; //end of setMap()
@@ -96,7 +99,7 @@ function joinData(worldCountries, csvData){
     return worldCountries;
 };
        	
-function setEnumerationUnits(worldCountries, map, path){
+function setEnumerationUnits(worldCountries, map, path, colorScale){
     //add countries
     var countries = map.selectAll(".countries")
         .data(worldCountries)
@@ -105,11 +108,49 @@ function setEnumerationUnits(worldCountries, map, path){
         .attr("class", function(d){
             return "countries " + d.properties.geounit;
          })
-        .attr("d", path);
-	
-	  console.log(worldCountries)
+        .attr("d", path)
+        .style("fill", function(d){
+            return choropleth(d.properties, colorScale);
+        });
+    };
+
+//function to create color scale generator
+function makeColorScale(data){
+    var colorClasses = [
+        "#D4B9DA",
+        "#C994C7",
+        "#DF65B0",
+        "#DD1C77",
+        "#980043"
+    ];
+
+    //create color scale generator
+    var colorScale = d3.scale.quantile()
+        .range(colorClasses);
+
+    //build array of all values of the expressed attribute
+    var domainArray = [];
+    for (var i=0; i<data.length; i++){
+        var val = parseFloat(data[i][expressed]);
+        domainArray.push(val);
+    };
+
+    //assign array of expressed values as scale domain
+    colorScale.domain(domainArray);
+
+    return colorScale;
 };
 
-
+//function to test for data value and return color
+function choropleth(props, colorScale){
+	//make sure attribute value is a number
+	var val = parseFloat(props[expressed]);
+	//if attribute value exists, assign a color; otherwise assign gray
+	if (val && val != NaN){
+		return colorScale(val);
+	} else {
+		return "#CCC";
+	};
+};
 
 })(); //last line of main.js
