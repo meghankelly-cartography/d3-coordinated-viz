@@ -1,267 +1,526 @@
-//First line of main.js...wrap everything in a self-executing anonymous function to move to local scope
-(function(){
+//Set up all global variables
 
-//pseudo-global variables
-var attrArray = ["HepB_2014", "Hib3_2014", "PAB_2014", "Polio_2014"];
-var expressed = attrArray[0]; //initial attribute
+var keyArray = ["HepB_2014", "Hib3_2014", "PAB_2014", "Polio_2014"];
 
-//start script onload
-window.onload = setMap();
+//array to hold colors for all other variables				
+colorArray = [	"#dadaeb",
+				"#bcbddc",
+				"#9e9ac8",
+				"#756bb1",
+				"#54278f"	];
 
-//set up choropleth map
+//array to hold values for maternal leave			
+maternalLeaveArray = [  "No paid leave",
+					"Less than 14 weeks",
+					"14 - 25 weeks",
+					"26 - 51 weeks",
+					"52 weeks or more",
+					"No data" ];
+var currentVariable = keyArray[0]; 
+var currentColors = []; //array to hold the colors currently displayed on map
+var currentArray = []; //array to hold scale currently being rendered on map
+var jsonCountries;
+var colorize; //colorscale generator
+var mapWidth = 1000, mapHeight = 500; //set map container dimensions
+var chartTitle; //dynamic title for chart
+var chartLabels = []; //dynamic labels for chart
+var squareWidth = 10; //width of rects in chart (in pixels)
+var squareHeight = 25; //height of rects in chart (in pixels)
+var chart; //create chart
+var chartWidth = 900; //width of chart (in pixels)
+var chartHeight = (squareHeight*5)+5; //set chart container dimensions
+var scale; 
+var description; //description of selected variable
+
+// Create global title for each variable
+var title_MaternalLeave = "Maternity Leave Law";
+var title_MaternalDeath = "Lifetime Risk of Maternal Death";
+var title_FemaleLaborForceTotal = "Women as Percentage of Labor Force";
+var title_FemaleLaborForceParticipationRate = "Women Labor Force Participation Rate";
+var title_FertilityRate = "Fertility Rate"			
+
+//Create the description container
+var descriptionDiv;
+
+// Create global descriptions for each variable
+var desc_MaternalLeave = "Length of paid maternal leave<sup>[1]</sup>";
+var desc_MaternalDeath = "The probability that a 15-year-old female will die eventually from a maternal cause assuming that current levels of fertility and mortality (including maternal mortality) do not change in the future, taking into account competing causes of death.<sup>[2]</sup>"
+var desc_FemaleLaborForceTotal = "Shows the extent to which women are active in the labor force. Labor force comprises people ages 15 and older who meet the International Labour Organization's definition of the economically active population.<sup>[2]</sup>";
+var desc_FemaleLaborForceParticipationRate = "Proportion of the female population ages 15 and older that is economically active: all people who supply labor for the production of goods and services during a specified period<sup>[2]</sup>";
+var desc_FertilityRate = "Represents the number of children that would be born to a woman if she were to live to the end of her childbearing years and bear children in accordance with current fertility rates.<sup>[2]</sup>"		
+//Holds the current range of colors
+var range;
+
+//begin script when window loads 
+window.onload = initialize();
+
+function initialize() {
+	setMap();
+};
+
+// set map parameters
 function setMap(){
 
-	//map frame dimensions
-    var width = window.innerWidth * 0.65,
-        height = 460;
+	var map = d3.select("body")
+		.append("svg")
+		.attr("width", mapWidth)
+		.attr("height", mapHeight)
+		.attr("class", "map");
 
-    //create new svg container for the map
-    var map = d3.select("body")
-        .append("svg")
-        .attr("class", "map")
-        .attr("width", width)
-        .attr("height", height);
+	//create page title
+	var pageTitle = d3.select("body")
+		.append("text")
+		.attr("class", "pageTitle")
+		.html("Global Vaccinations:<br>A millenium goal met?");
 
 	var projection = d3.geo.robinson()
     	.scale(150)
-    	.translate([width / 2, height / 2])
+    	.translate([mapWidth / 2, mapHeight / 2])
     	.precision(.1);
-        
-    var path = d3.geo.path()
-        .projection(projection);
 
-	//use queue.js to load data simultaneously
-	d3_queue.queue()
-        .defer(d3.csv, "data/Countries_vac2.csv") //load attributes from csv
+    //Draw the SVG
+    var path = d3.geo.path()
+    	.projection(projection);
+
+	//create graticule generator
+	var graticule = d3.geo.graticule(); 
+
+	//create graticule background (aka water)
+	var gratBackground = map.append("path")
+		.datum(graticule.outline)
+		.attr("class", "gratBackground")
+		.attr("d", path)
+
+	var gratLines = map.selectAll(".gratLines")
+		.data(graticule.lines) //
+		.enter()
+		.append("path") //append one path for each element of the data (in this case, each graticule line)
+		.attr("class", "gratLines")
+		.attr("d", path) //this path is the variable path defined above. path generator
+
+	//use queue.js to load all data at the same time
+	queue()
+		.defer(d3.csv, "data/Countries_vac2.csv") //load attributes from csv
 		.defer(d3.json, "data/map.topojson") //load choropleth spatial data
         .await(callback);
-	                
-    function callback(error, csvData, world){
-  
-       	//place graticule on the map
-        setGraticule(map, path);
-       	
-       	//translate world TopoJson
-       	var worldCountries = topojson.feature(world, world.objects.collection).features;
-       	
-       	//join csv data to GeoJSON enumeration units
-       	worldCountries = joinData(worldCountries, csvData);
 
-        //create the color scale
-        var colorScale = makeColorScale(csvData);
-        
-        //add enumeration units to the map
-        setEnumerationUnits(worldCountries, map, path, colorScale);
-        
-        //add coordinated visualization to the map
-        setChart(csvData, colorScale);
-        
-    };
-}; //end of setMap()
+	// function callback(error, csvData, countries) {
+	// 	var countries = map.selectAll(".countries")
+	// 		.data(topojson.feature(countries, countries.objects.countries).features)
+	function callback(error, csvData, countries) { //the callback function accepts an error, and then after the error, one parameter for each defer line within queue(). it accepts them in the same order that the defer lines are placed... so in this case, csvData is written first, and then countries, so that's the order they're accepted as parameters
 
-function setGraticule(map, path){
-// 	   	graticule generator
-//         var graticule = d3.geo.graticule()
-//             .step([5, 5]); //place graticule lines every 5 degrees of longitude and latitude
-// 
-//         create graticule lines
-//         var gratLines = map.selectAll(".gratLines") //select graticule elements that will be created
-//             .data(graticule.lines()) //bind graticule lines to each element to be created
-//             .enter() //create an element for each datum
-//             .append("path") //append each element to the svg as a path element
-//             .attr("class", "gratLines") //assign class for styling
-//             .attr("d", path); //project graticule lines 
-}; //end of setGraticule
+		var colorize = colorScale(csvData);
 
-function joinData(worldCountries, csvData){
+		//create variable for csv to json data transfer
+		var jsonCountries = countries.objects.countries.geometries;
+		//Create outer loop through csv data. Assign each country code to a variable.
+		for (var i=0; i<csvData.length; i++) {
+			var csvCountry = csvData[i]; 
+			var csvCountryCode = csvCountry.code3;
 
-	//loop through csv to assign each set of csv attribute values to geojson region
-    for (var i=0; i<csvData.length; i++){
-    	
-        var csvCountry = csvData[i]; //the current region
-        var csvKey = csvCountry.GEOUNIT; //the CSV primary key
+			//create inner loop through json data to assign csv data to correct country
+			for (var j = 0; j < jsonCountries.length; j++) {
+				
+				//if the country codes match, attach the CSV data to the json object
+				if (jsonCountries[j].properties.code3 == csvCountryCode) {
+					//inner loop to add the csv values to the json object
+					for (var key in keyArray) {
+						//for the Maternal Leave and Paternal Leave attributes, the data is qualitative, so shouldn't convert to a float
+						if (keyArray[key] == "MaternalLeave" || keyArray[key] == "PaternalLeave") {
+							var attribute = keyArray[key];
+							var value = csvCountry[attribute];
+							jsonCountries[j].properties[attribute] = value;
+						//for the Fertility Rate, round to one decimal point
+						} else if (keyArray[key] == "FertilityRate") {
+							var attribute = keyArray[key];
+							var value = csvCountry[attribute];
+							jsonCountries[j].properties[attribute] = value;
+						} else {
+						//else, round to nearest integer, and attach CSV data to json object
+							var attribute = keyArray[key];
+							var value = parseFloat(csvCountry[attribute]);
+							jsonCountries[j].properties[attribute] = value;
+							// console.log(jsonCountries[j]);
+						};
+					};
+					break; //stop looking through json countries
+				};
+			};
+		};
 
-        //loop through geojson regions to find correct region
-        for (var a=0; a<worldCountries.length; a++){
+		var countries = map.selectAll(".countries")
+			.data(topojson.feature(countries, countries.objects.collection).features) //translates data into an array of geojson features. essentially creates a for-in loop. for element in data, do this. and this is defined by everything below.
+			.enter()
+			.append("path")
+			.attr("class", function(d) {
+				return "countries " + d.properties.code3;
+			})
+			.attr("d", function(d) {
+				return path(d);
+			})
+			.style("fill", function(d){
+				// console.log(choropleth(d, colorize));	
+				return choropleth(d, colorize); // updates dynamically depending on the currentVariable
+			})
+			.on("mouseover", highlight)
+			.on("mouseout", dehighlight)
+			.on("mousemove", moveLabel)
+		
+		var countriesColor = countries.append("desc")
+				.text(function(d) {
+					return choropleth(d, colorize);
+				});
 
-            var geojsonProps = worldCountries[a].properties; //the current region geojson properties
-            var geojsonKey = geojsonProps.geounit; //the geojson primary key
-
-            //where primary keys match, transfer csv data to geojson properties object
-            if (geojsonKey == csvKey){
-
-                //assign all attributes and values
-                attrArray.forEach(function(attr){
-                    var val = parseFloat(csvCountry[attr]); //get csv attribute value
-                    geojsonProps[attr] = val; //assign attribute and value to geojson properties
-                });
-            };
-        };
-    };
-    
-    return worldCountries;
-};
-       	
-function setEnumerationUnits(worldCountries, map, path, colorScale){
-    //add countries
-    var countries = map.selectAll(".countries")
-        .data(worldCountries)
-        .enter()
-        .append("path")
-        .attr("class", function(d){
-            return "countries " + d.properties.geounit;
-         })
-        .attr("d", path)
-        .style("fill", function(d){
-            return choropleth(d.properties, colorScale);
-        });
-    };
-
-//function to create color scale generator
-function makeColorScale(data){
-    var colorClasses = [
-        "#D4B9DA",
-        "#C994C7",
-        "#DF65B0",
-        "#DD1C77",
-        "#980043"
-    ];
-
-    //create color scale generator
-    var colorScale = d3.scale.quantile()
-        .range(colorClasses);
-
-    //build array of all values of the expressed attribute
-    var domainArray = [];
-    for (var i=0; i<data.length; i++){
-        var val = parseFloat(data[i][expressed]);
-        domainArray.push(val);
-    };
-
-    //assign array of expressed values as scale domain
-    colorScale.domain(domainArray);
-
-    return colorScale;
-};
-
-//function to test for data value and return color
-function choropleth(props, colorScale){
-	//make sure attribute value is a number
-	var val = parseFloat(props[expressed]);
-	//if attribute value exists, assign a color; otherwise assign gray
-	if (val && val != NaN){
-		return colorScale(val);
-	} else {
-		return "#CCC";
+		createDropdown(csvData);
+		setChart(csvData, colorize); //create coordinated visualization
+		createDescriptions(csvData);
+		about();
+		// zoom();
 	};
 };
 
-//function to create coordinated bar chart
-function setChart(csvData, colorScale){
-    //chart frame dimensions
-    var chartWidth = window.innerWidth * .3,
-        chartHeight = 460;
-        leftPadding = 25,
-        rightPadding = 2,
-        topBottomPadding = 5,
-        chartInnerWidth = chartWidth - leftPadding - rightPadding,
-        chartInnerHeight = chartHeight - topBottomPadding * 2,
-        translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
+function createDropdown(csvData) {
+	var d_label;
+	var dropdown = d3.select("body")
+		.append("div")
+		.attr("class", "dropdown")
+		.html("<h3>Select an Indicator:</h3>")
+		.append("select")
+		.on("change", function() { changeAttribute(this.value, csvData) } );
 
-    //create a second svg element to hold the bar chart
-    var chart = d3.select("body")
-        .append("svg")
-        .attr("width", chartWidth)
-        .attr("height", chartHeight)
-        .attr("class", "chart");
-        
-   	//create a rectangle for chart background fill
-    var chartBackground = chart.append("rect")
-        .attr("class", "chartBackground")
-        .attr("width", chartInnerWidth)
-        .attr("height", chartInnerHeight)
-        .attr("transform", translate);
-   	
-   	//create a scale to size bars proportionally to frame and for axis
-    var yScale = d3.scale.linear()
-        .range([463, 0])
-        .domain([0, 100]);
-
-    //set bars for each country
-    var bars = chart.selectAll(".bars")
-        .data(csvData)
-        .enter()
-        .append("rect")
-        .sort(function(a, b){
-            return a[expressed]-b[expressed]
-        })
-        .attr("class", function(d){
-            return "bars " + d.geounit;
-        })
-        .attr("width", chartWidth / csvData.length - 1)
-        .attr("x", function(d, i){
-            return i * (chartWidth / csvData.length);
-        })
-        .attr("height", function(d){
-            return yScale(parseFloat(d[expressed]));
-        })
-        .attr("y", function(d){
-            return chartHeight - yScale(parseFloat(d[expressed]));
-        })
-        
-        .style("fill", function(d){
-            return choropleth(d, colorScale);
-        });
-        
-        
-    //annotate bars with attribute value text
-    var numbers = chart.selectAll(".numbers")
-        .data(csvData)
-        .enter()
-        .append("text")
-        .sort(function(a, b){
-            return a[expressed]-b[expressed]
-        })
-        .attr("class", function(d){
-            return "numbers " + d.adm1_code;
-        })
-        .attr("text-anchor", "middle")
-        .attr("x", function(d, i){
-            var fraction = chartWidth / csvData.length;
-            return i * fraction + (fraction - 1) / 2;
-        })
-        .attr("y", function(d){
-            return chartHeight - yScale(parseFloat(d[expressed])) + 15;
-        })
-        .text(function(d){
-            return d[expressed];
-        });
-        
-        
-    //create a text element for the chart title
-    var chartTitle = chart.append("text")
-        .attr("x", 20)
-        .attr("y", 40)
-        .attr("class", "chartTitle")
-        .text(" " + expressed + " Vaccinations by Country");
-        
-    //create vertical axis generator
-    var yAxis = d3.svg.axis()
-        .scale(yScale)
-        .orient("left");
-        
-    //place axis
-    var axis = chart.append("g")
-        .attr("class", "axis")
-        .attr("transform", translate)
-        .call(yAxis);
-        
-    //create frame for chart border
-    var chartFrame = chart.append("rect")
-        .attr("class", "chartFrame")
-        .attr("width", chartInnerWidth)
-        .attr("height", chartInnerHeight)
-        .attr("transform", translate);
+	dropdown.selectAll("options")
+		.data(keyArray)
+		.enter()
+		.append("option")
+		.attr("value", function(d) { return d })
+		.text(function(d) {
+			if (d == "MaternalLeave") {
+				d = title_MaternalLeave;
+			} else if (d == "PaternalLeave") {
+				d = "Paternity Leave Law";
+			} else if (d == "MaternalDeath") {
+				d = title_MaternalDeath;
+			} else if (d == "FemaleLaborForceTotal") {
+				d = title_FemaleLaborForceTotal;
+			} else if (d == "FemaleLaborForceParticipationRate") {
+				d = title_FemaleLaborForceParticipationRate;
+			} else if (d == "FertilityRate") {
+				d = title_FertilityRate;
+			};
+			return d;
+		});
 };
 
-})(); //last line of main.js
+function changeAttribute(attribute, csvData) {
+
+	//update the current variable
+	currentVariable = attribute;
+	colorize = colorScale(csvData);
+
+	//update the map colors
+	d3.selectAll(".countries") 
+		.style("fill", function(d) {
+			return choropleth(d, colorize);
+		})
+		.select("desc")
+			.text(function(d) {
+				return choropleth(d, colorize);
+			});
+
+	var squares = d3.selectAll(".square");
+	updateChart(squares, csvData.length, csvData);
+	updateDescriptions(csvData);
+};
+
+function colorScale(csvData) {
+	//creating a variable to hold color generator
+	// var color;
+	//if the data is ordinal, set color to an ordinal scale
+	if (currentVariable == "MaternalLeave" || currentVariable == "PaternalLeave") {
+		scale = d3.scale.ordinal();
+		currentColors = ordinalColorArray;
+	//the Maternal Death variable should have reversed colors to represent higher rates of death as darker colors
+	} else if (currentVariable == "MaternalDeath") {
+		scale = d3.scale.threshold();
+		currentColors = deathColorArray;
+	} else { //otherwise, set color to a threshold scale with regular colors
+		scale = d3.scale.threshold();
+		currentColors = colorArray;
+	};
+
+	//set the range to the appropriate range based on which variable is selected
+	scale = scale.range(currentColors);
+	
+	for (var i in csvData) {
+		//if the data is ordinal, just add the string to the current array
+		if (currentVariable == "MaternalLeave" || currentVariable == "PaternalLeave") {
+			currentArray = maternalLeaveArray; 
+		} else if (currentVariable == "MaternalDeath") { //else, convert data to number and add to current array
+			currentArray = [100, 500, 1000, 5000, 50000];
+		} else if (currentVariable == "FemaleLaborForceTotal") {
+			currentArray = [30, 40, 45, 50, 60];
+		} else if (currentVariable == "FemaleLaborForceParticipationRate") {
+			currentArray = [30, 50, 57, 65, 100];
+		} else if (currentVariable == "FertilityRate") {
+			currentArray = [1.5, 2, 3, 5, 8];
+		};
+	};
+	scale.domain(currentArray); //pass array of values as the domain
+	return scale; //return color scale generator
+};
+
+function choropleth(d, colorize){
+	//get data value
+	
+	var value = d.properties ? d.properties[currentVariable] : d[currentVariable];
+	//if the value exists, assign it a color; otherwise assign gray
+	if (value) {
+		return colorize(value);
+	} else if (value == "No data") {
+		return "#ccc";
+	} else {
+		return "#ccc";
+	}
+};
+
+function setChart(csvData, colorize) {
+
+	//create container for chart
+	chart = d3.select("body")
+		.append("svg")
+		.attr("width", chartWidth)
+		.attr("height", chartHeight)
+		.attr("class", "chart");
+
+	//create chart title
+	chartTitle = d3.select("body")
+		.append("text")
+		.attr("class", "chartTitle");
+
+	chartLabels = d3.select("body")
+		.append("div")
+		.attr("class", "chartLabels");
+
+	//append squares to the chart, one square to represent each country
+	var squares = chart.selectAll(".square")
+		.data(csvData)
+		.enter()
+		.append("rect")
+		.attr("class", function(d){
+			return "square " + d.code3;
+		})
+		.attr("width", squareWidth+"px")
+		.attr("height", squareHeight+"px");
+
+	updateChart(squares, csvData.length, csvData);
+};
+
+function updateChart(squares, numSquares, csvData){
+	colorize = colorScale(csvData);
+	var xValue = 0; 
+	var yValue = 0;
+	var colorObjectArray = [];
+
+	//create chart labels dynamically, based on currentVariable/currentArray
+	var chartLabel = chartLabels.html(function(d) {
+		if (currentVariable == "MaternalLeave") {
+			return currentArray[0]+"<br>"
+			+currentArray[1]+"<br>"
+			+currentArray[2]+"<br>"
+			+currentArray[3]+"<br>"
+			+currentArray[4]+"<br>";
+		} else if (currentVariable == "MaternalDeath") {
+			return "1:"+currentArray[0]+"<br>"
+			+"1:"+currentArray[1]+"<br>"
+			+"1:"+currentArray[2]+"<br>"
+			+"1:"+currentArray[3]+"<br>"
+			+"1:"+currentArray[4]+"<br>";
+		} else if (currentVariable == "FemaleLaborForceTotal") {
+			return currentArray[0]+"%"+"<br>"
+			+currentArray[1]+"%"+"<br>"
+			+currentArray[2]+"%"+"<br>"
+			+currentArray[3]+"%"+"<br>"
+			+currentArray[4]+"%"+"<br>";			
+		} else if (currentVariable == "FemaleLaborForceParticipationRate") {
+			return currentArray[0]+"%"+"<br>"
+			+currentArray[1]+"%"+"<br>"
+			+currentArray[2]+"%"+"<br>"
+			+currentArray[3]+"%"+"<br>"
+			+currentArray[4]+"%"+"<br>";	
+		} else if (currentVariable == "FertilityRate") {
+			return currentArray[0]+"<br>"
+			+currentArray[1]+"<br>"
+			+currentArray[2]+"<br>"
+			+currentArray[3]+"<br>"
+			+currentArray[4]+"<br>";
+		}
+	});
+
+	//update chart title based on selected attribute
+	// chartTitle.text(function(d) {
+	// 	if (currentVariable == "MaternalLeave") { return title_MaternalLeave+" (Length of Paid Maternal Leave)"; }
+	// 	else if (currentVariable == "MaternalDeath") { return title_MaternalDeath+" (Probability a woman will eventually die from a maternal cause)"; }
+	// 	else if (currentVariable == "FemaleLaborForceTotal") { return title_FemaleLaborForceTotal; }
+	// 	else if (currentVariable == "FemaleLaborForceParticipationRate") { return title_FemaleLaborForceParticipationRate+" (Percentage of Women Ages 15+ Who Work)"; }
+	// 	else if (currentVariable == "FertilityRate") { return title_FertilityRate+" (Average Number of Children per Woman)"; } 
+	// });
+
+	//create object array to hold a count of how many countries are in each class
+	for (i = 0; i < currentColors.length; i++) {
+		var colorObject = {"color": currentColors[i],"count":0} ;
+		colorObjectArray.push(colorObject);			
+	}
+
+	var squareColor = squares.style("fill", function(d) {
+			return choropleth(d, colorize);
+		})
+		.attr("x", function(d,i) {
+			color = choropleth(d, colorize);
+			//for loop arranges each class so that the squares are contiguous horizontally
+			for (i = 0; i < colorObjectArray.length; i++) {
+				if (colorObjectArray[i].color == color) {
+					xValue = colorObjectArray[i].count*(squareWidth+1);
+					colorObjectArray[i].count+=1;
+				}
+				if (color == "#ccc" || color == undefined) {
+					xValue = -100000;
+				}
+			}
+			return xValue;
+		})
+		.attr("y", function(d,i) {
+			color = choropleth(d, colorize);
+			// var xLocation = Parse(this);
+			if (color == currentColors[0]) {
+				return 0
+			} else if (color == currentColors[1]) {
+				return (squareHeight+1);
+			} else if (color == currentColors[2]) {
+				return (squareHeight+1)*2;
+			} else if (color == currentColors[3]) {
+				return (squareHeight+1)*3;
+			} else if (color == currentColors[4]) {
+				return (squareHeight+1)*4;
+			} else if (color == currentColors[5]) {
+				return (squareHeight+1)*5;
+			}
+		})
+		.on("mouseover", highlight)
+		.on("mouseout", dehighlight)
+		.on("mousemove", moveLabel);
+	};
+
+function highlight(csvData) {
+	var properties = csvData.properties ? csvData.properties : csvData;
+	
+	d3.selectAll("."+properties.code3)
+		.style("fill", "#f7eb3e");
+
+	var labelAttribute = properties[currentVariable]+"<br>"+currentVariable;
+	
+	var labelName;
+	if (properties.name_long == undefined) {
+		labelName = properties.Country;
+	} else {
+		labelName = properties.name_long;
+	}
+	
+	if (Boolean(properties[currentVariable]) == true) {
+		if (currentVariable == "MaternalLeave") {
+			labelAttribute = properties[currentVariable];
+		} else if (currentVariable == "MaternalDeath") {
+			labelAttribute = "1 in "+properties[currentVariable]+"<br>women die from maternal causes"
+		} else if (currentVariable == "FemaleLaborForceTotal") {
+			labelAttribute = Math.round(properties[currentVariable])+"% of the labor force is composed of women"
+		} else if (currentVariable == "FemaleLaborForceParticipationRate") {
+			labelAttribute = Math.round(properties[currentVariable])+"% of women work"
+		} else if (currentVariable == "FertilityRate") {
+			labelAttribute = Math.round(properties[currentVariable]*10)/10+"<br>Average Number of Children Per Woman"
+		};
+	} else { //if no data associated with selection, display "No data"
+		labelAttribute = "No data";
+	};
+
+
+	var infoLabel = d3.select("body")
+		.append("div")
+		.attr("class", "infoLabel")
+		.attr("id",properties.code3+"label")
+		.html(labelName)
+		.append("div")
+		.html(labelAttribute)
+		.attr("class", "labelName");
+};
+
+function dehighlight(csvData) {
+	var properties = csvData.properties ? csvData.properties : csvData;
+
+	var selection = d3.selectAll("."+properties.code3);
+
+	var fillColor = selection.select("desc").text();
+	selection.style("fill", fillColor);
+	
+	var deselect = d3.select("#"+properties.code3+"label").remove(); //remove info label
+};
+
+function moveLabel(csvData) {
+
+	//horizontal label coordinate based mouse position stored in d3.event
+	var x = d3.event.clientX < window.innerWidth - 245 ? d3.event.clientX+10 : d3.event.clientX-210; 
+	//vertical label coordinate
+	var y = d3.event.clientY < window.innerHeight - 100 ? d3.event.clientY-75 : d3.event.clientY-175; 
+	
+	d3.select(".infoLabel") //select the label div for moving
+		.style("margin-left", x+"px") //reposition label horizontal
+		.style("margin-top", y+"px"); //reposition label vertical
+};
+
+function createDescriptions(csvData) {
+
+	descriptionDiv = d3.select("body")
+		.append("div")
+		.attr("class", "descriptionDiv");
+
+	updateDescriptions(csvData);
+}
+
+function updateDescriptions(csvData) {
+	descriptionTitle = descriptionDiv
+		.html(function(d) {
+			if (currentVariable == "MaternalLeave") { return title_MaternalLeave+"<br>" }
+			if (currentVariable == "MaternalDeath") { return title_MaternalDeath+"<br>"; }
+			if (currentVariable == "FemaleLaborForceTotal") { return title_FemaleLaborForceTotal+"<br>"; }
+			if (currentVariable == "FemaleLaborForceParticipationRate") { return title_FemaleLaborForceParticipationRate+"<br>"; }
+			if (currentVariable == "FertilityRate") { return title_FertilityRate+"<br>"; } 
+		})
+		.attr("class", "descriptionTitle");
+
+	description = descriptionDiv.append("text")
+		.html(function(d) { 
+			if (currentVariable == "MaternalLeave") { return desc_MaternalLeave; }
+			if (currentVariable == "MaternalDeath") { return desc_MaternalDeath; }
+			if (currentVariable == "FemaleLaborForceTotal") { return desc_FemaleLaborForceTotal; } desc_FemaleLaborForceTotal
+			if (currentVariable == "FemaleLaborForceParticipationRate") { return desc_FemaleLaborForceParticipationRate; }
+			if (currentVariable == "FertilityRate") { return desc_FertilityRate; } 
+		})
+		.attr("class", "description");
+}
+
+function about() {
+
+	var about = d3.select("body")
+		.append("div")
+		.attr("class", "about")
+		.html("About: <br>")
+		.append("div")
+		.html(
+			"This website was created by Robin Tolochko in Fall 2014 | <a href='http://www.tolomaps.com' target='_blank'>Website</a> | <a href='http://www.twitter.com/tolomaps' target='_blank'>Twitter</a><br>"
+			+"Brief writeup of the project on my portfolio, <a href='http://tolomaps.com/portfolio/modern-motherhood-a-world-of-struggle/'>here</a>.")
+		.attr("class", "aboutText");
+
+	var sources = d3.select(".about")
+		.append("text")
+		.html(
+			"<br><br><sup>[1]</sup>Data for Maternity Leave Law (Year Unknown) is from the <a href='http://worldpolicyforum.org/tables/workplace-policies-childbirth/' target='_blank'>World Policy Forum</a>"+"<br>"+"<sup>[2]</sup>All other data is from the <a href='http://data.worldbank.org/indicator' target='_blank'>World Bank</a>: Lifetime Risk of Maternal Death (2013), Women as Percentage of Labor Force (2012), Women Labor Force Participation Rate (2012), and Fertility Rate (2012)")
+		.attr("class", "sources")
+}
