@@ -253,9 +253,73 @@ function updateChart(squares, numSquares, csvData){
 			}
 			
 		})
-		// .on("mouseover", highlight)
-// 		.on("mouseout", dehighlight)
-// 		.on("mousemove", moveLabel);
+		.on("mouseover", highlight)
+		.on("mouseout", dehighlight)
+ 		.on("mousemove", moveLabel);
 	};
+	
+	
+function highlight(csvData) {
+	var properties = csvData.properties ? csvData.properties : csvData;
+	
+	d3.selectAll("."+properties.code3)
+		.style("fill", "#f7eb3e");
+
+	var labelAttribute = properties[currentVariable]+"<br>"+currentVariable;
+	
+	var labelName;
+	if (properties.name_long == undefined) {
+		labelName = properties.GEOUNIT;
+	} else {
+		labelName = properties.GEOUNIT;
+	}
+	
+	if (Boolean(properties[currentVariable]) == true) {
+		if (currentVariable == "HepB_2014") {
+			labelAttribute = properties[currentVariable];
+		} else if (currentVariable == "Hib3_2014") {
+			labelAttribute = "1 in "+properties[currentVariable]+"<br>test"
+		} else if (currentVariable == "PAB_2014") {
+			labelAttribute = Math.round(properties[currentVariable])+"test"
+		} else if (currentVariable == "Polio_2014") {
+			labelAttribute = Math.round(properties[currentVariable])+"test"
+		}; 
+	} else { //if no data associated with selection, display "No data"
+		labelAttribute = "No data";
+	};
+
+
+	var infoLabel = d3.select("body")
+		.append("div")
+		.attr("class", "infoLabel")
+		.attr("id",properties.GEOUNIT+"label")
+		.html(labelName)
+		.append("div")
+		.html(labelAttribute)
+		.attr("class", "labelName");
+};
+
+function dehighlight(csvData) {
+	var properties = csvData.properties ? csvData.properties : csvData;
+
+	var selection = d3.selectAll("."+properties.GEOUNIT);
+
+	var fillColor = selection.select("desc").text();
+	selection.style("fill", fillColor);
+	
+	var deselect = d3.select("#"+properties.GEOUNIT+"label").remove(); //remove info label
+};
+
+function moveLabel(csvData) {
+
+	//horizontal label coordinate based mouse position stored in d3.event
+	var x = d3.event.clientX < window.innerWidth - 245 ? d3.event.clientX+10 : d3.event.clientX-210; 
+	//vertical label coordinate
+	var y = d3.event.clientY < window.innerHeight - 100 ? d3.event.clientY-75 : d3.event.clientY-175; 
+	
+	d3.select(".infoLabel") //select the label div for moving
+		.style("margin-left", x+"px") //reposition label horizontal
+		.style("margin-top", y+"px"); //reposition label vertical
+};
 
 })(); //last line of main.js
