@@ -5,6 +5,13 @@
 var attrArray = ["HepB_2014", "Hib3_2014", "PAB_2014", "Polio_2014"];
 var expressed = attrArray[0]; //initial attribute
 
+var colorClasses = [
+        "#D4B9DA",
+        "#C994C7",
+        "#DF65B0",
+        "#DD1C77",
+        "#980043"
+    ];
 var currentVariable = attrArray[0]; 
 var currentColors = []; //array to hold the colors currently displayed on map
 var currentArray = []; //array to hold scale currently being rendered on map
@@ -17,10 +24,9 @@ var squareWidth = 10; //width of rects in chart (in pixels)
 var squareHeight = 25; //height of rects in chart (in pixels)
 var chart; //create chart
 var chartWidth = 900; //width of chart (in pixels)
-var chartHeight = (squareHeight*5)+5; //set chart container dimensions
+var chartHeight = (squareHeight*6)+5; //set chart container dimensions
 var scale; 
 var description; //description of selected variable
-
 
 //start script onload
 window.onload = setMap();
@@ -137,13 +143,6 @@ function setEnumerationUnits(worldCountries, map, path, colorScale){
 
 //function to create color scale generator
 function makeColorScale(data){
-    var colorClasses = [
-        "#D4B9DA",
-        "#C994C7",
-        "#DF65B0",
-        "#DD1C77",
-        "#980043"
-    ];
 
     //create color scale generator
     var colorScale = d3.scale.quantile()
@@ -205,8 +204,6 @@ function setChart(csvData, colorScale){
 		.attr("height", squareHeight+"px");
 		
 		updateChart(squares, csvData.length, csvData);
-		
-
 };
 
 function updateChart(squares, numSquares, csvData){
@@ -216,8 +213,8 @@ function updateChart(squares, numSquares, csvData){
 	var colorObjectArray = [];
 
 	//create object array to hold a count of how many countries are in each class
-	for (i = 0; i < currentColors.length; i++) {
-		var colorObject = {"color": currentColors[i],"count":0} ;
+	for (i = 0; i < colorClasses.length; i++) {
+		var colorObject = {"color": colorClasses[i],"count":0} ;
 		colorObjectArray.push(colorObject);			
 	}
 
@@ -243,17 +240,18 @@ function updateChart(squares, numSquares, csvData){
 			// var xLocation = Parse(this);
 			if (color == currentColors[0]) {
 				return 0
-			} else if (color == currentColors[1]) {
+			} else if (color == colorClasses[1]) {
 				return (squareHeight+1);
-			} else if (color == currentColors[2]) {
+			} else if (color == colorClasses[2]) {
 				return (squareHeight+1)*2;
-			} else if (color == currentColors[3]) {
+			} else if (color == colorClasses[3]) {
 				return (squareHeight+1)*3;
-			} else if (color == currentColors[4]) {
+			} else if (color == colorClasses[4]) {
 				return (squareHeight+1)*4;
 			} else if (color == currentColors[5]) {
 				return (squareHeight+1)*5;
 			}
+			
 		})
 		// .on("mouseover", highlight)
 // 		.on("mouseout", dehighlight)
