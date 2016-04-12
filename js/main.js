@@ -16,6 +16,7 @@ maternalLeaveArray = [  "No paid leave",
 					"26 - 51 weeks",
 					"52 weeks or more",
 					"No data" ];
+					
 var currentVariable = keyArray[0]; 
 var currentColors = []; //array to hold the colors currently displayed on map
 var currentArray = []; //array to hold scale currently being rendered on map
@@ -30,14 +31,7 @@ var chart; //create chart
 var chartWidth = 900; //width of chart (in pixels)
 var chartHeight = (squareHeight*5)+5; //set chart container dimensions
 var scale; 
-var description; //description of selected variable
-
-// Create global title for each variable
-var title_MaternalLeave = "Maternity Leave Law";
-var title_MaternalDeath = "Lifetime Risk of Maternal Death";
-var title_FemaleLaborForceTotal = "Women as Percentage of Labor Force";
-var title_FemaleLaborForceParticipationRate = "Women Labor Force Participation Rate";
-var title_FertilityRate = "Fertility Rate"			
+var description; //description of selected variable		
 
 //Create the description container
 var descriptionDiv;
@@ -165,6 +159,7 @@ function setMap(){
 			.on("mouseover", highlight)
 			.on("mouseout", dehighlight)
 			.on("mousemove", moveLabel)
+			
 		
 		var countriesColor = countries.append("desc")
 				.text(function(d) {
@@ -194,18 +189,14 @@ function createDropdown(csvData) {
 		.append("option")
 		.attr("value", function(d) { return d })
 		.text(function(d) {
-			if (d == "MaternalLeave") {
-				d = title_MaternalLeave;
-			} else if (d == "PaternalLeave") {
-				d = "Paternity Leave Law";
-			} else if (d == "MaternalDeath") {
-				d = title_MaternalDeath;
-			} else if (d == "FemaleLaborForceTotal") {
-				d = title_FemaleLaborForceTotal;
-			} else if (d == "FemaleLaborForceParticipationRate") {
-				d = title_FemaleLaborForceParticipationRate;
-			} else if (d == "FertilityRate") {
-				d = title_FertilityRate;
+			if (d == "HepB_2014") {
+				d = "Yes";
+			} else if (d == "Hib3_2014") {
+				d = "Yes";
+			} else if (d == "PAB_2014") {
+				d = "Yes";
+			} else if (d == "Polio_2014") {
+				d = "Yes";
 			};
 			return d;
 		});
