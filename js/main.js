@@ -6,8 +6,8 @@ var attrArray = ["HepB", "Hib3", "PAB", "Polio", "DTP"];
 var expressed = attrArray[0]; //initial attribute
 
 //chart frame dimensions
-var chartWidth = 600,
-    chartHeight = 250,
+var chartWidth = window.innerWidth * .8,
+    chartHeight = 200;
     leftPadding = 0,
     rightPadding = 0,
     topBottomPadding = 5,
@@ -52,9 +52,6 @@ function setMap(){
         .await(callback);
 	                
     function callback(error, csvData, world){
-  
-       	//place graticule on the map
-        setGraticule(map, path);
        	
        	//translate world TopoJson
        	var worldCountries = topojson.feature(world, world.objects.collection).features;
@@ -75,20 +72,6 @@ function setMap(){
         createDropdown(csvData);    
     };
 }; //end of setMap()
-
-function setGraticule(map, path){
-// 	   	graticule generator
-//         var graticule = d3.geo.graticule()
-//             .step([5, 5]); //place graticule lines every 5 degrees of longitude and latitude
-// 
-//         create graticule lines
-//         var gratLines = map.selectAll(".gratLines") //select graticule elements that will be created
-//             .data(graticule.lines()) //bind graticule lines to each element to be created
-//             .enter() //create an element for each datum
-//             .append("path") //append each element to the svg as a path element
-//             .attr("class", "gratLines") //assign class for styling
-//             .attr("d", path); //project graticule lines 
-}; //end of setGraticule
 
 function joinData(worldCountries, csvData){
 
@@ -139,20 +122,14 @@ function setEnumerationUnits(worldCountries, map, path, colorScale){
             dehighlight(d.properties);
         })
         
-        .on("mousemove", moveLabel);
+        .on("mousemove", moveLabel)
         
         //add style descriptor to each path
-    	var desc = countries.append("desc")
-        	.text("fill", function(d) {
-	 			return choropleth(d, colorScale);
+    	var countriesColor = countries.append("desc")
+        	.text(function(d) {
+	 			return choropleth(d.properties, colorScale);
 	 	});
-        	
-        	//.text('{"fill": "none"}');
-
-//         	.text("fill": function(d) {
-// 					return choropleth(d.properties, colorScale);
-// 				});
-    };
+};
 
 //function to create color scale generator
 function makeColorScale(data){
@@ -202,13 +179,6 @@ function setChart(csvData, colorScale){
         .attr("width", chartWidth)
         .attr("height", chartHeight)
         .attr("class", "chart");
-        
-   	//create a rectangle for chart background fill
-    var chartBackground = chart.append("rect")
-        .attr("class", "chartBackground")
-        .attr("width", chartInnerWidth)
-        .attr("height", chartInnerHeight)
-        .attr("transform", translate);
 
     //set bars for each province
     var bars = chart.selectAll(".bar")
@@ -257,13 +227,6 @@ function setChart(csvData, colorScale){
         .attr("transform", translate)
         .call(yAxis);
         
-    //create frame for chart border
-    var chartFrame = chart.append("rect")
-        .attr("class", "chartFrame")
-        .attr("width", chartInnerWidth)
-        .attr("height", chartInnerHeight)
-        .attr("transform", translate);
-        
     //set bar positions, heights, and colors
     updateChart(bars, csvData.length, colorScale);
 };
@@ -307,7 +270,11 @@ function changeAttribute(attribute, csvData){
         .duration(500)
         .style("fill", function(d){
             return choropleth(d.properties, colorScale)
-        });
+        })
+        .select("desc")
+        	.text(function(d){
+        		return choropleth(d.properties, colorScale);
+        	});
 
     //re-sort, resize, and recolor bars
     var bars = d3.selectAll(".bar")
@@ -358,27 +325,16 @@ function highlight(props){
         });
         
     setLabel(props);
-
 };
 
 //function to reset the element style on mouseout
 function dehighlight(props){
-    var selected = d3.selectAll("." + props.geounit)
-        .style({
-            "fill": function(){
-                return getStyle(this, "fill")
-            },
-        });
+    var selection = d3.selectAll("." + props.geounit);
 
-    function getStyle(element, styleName){
-        var styleText = d3.select(element)
-            .select("desc")
-            .text();
-
-//         var styleObject = JSON.parse(styleText);
-// 
-//         return styleObject[styleName];
-    };
+    var fillColor = selection.select("desc")
+        .text();
+        
+    selection.style("fill", fillColor);
     
     d3.select(".infolabel")
         .remove();

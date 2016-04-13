@@ -111,15 +111,6 @@ option {
     font-weight: normal;
 }
 
-.gratLines{
-    stroke: gray;
-    stroke-width: .25px;
-}
-
-.gratBackground {
-    fill: #9AC0CD;
-}
-
 .map {
     /* border: thin solid gray;*/
     padding-left: 0;
@@ -128,10 +119,11 @@ option {
 .chart {
     float: center;
     background-color: white;
-    border: medium solid red;
+    /*border: medium solid red;*/
     float: center;
     margin-top: 0px;
-    padding-left: 40%;
+    margin-left: 38%;
+	padding-left: 0%;
 
 }
 
@@ -141,24 +133,15 @@ option {
 }
 
 .chartTitle {
+
+	font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+   	text-align: center;
     fill: black;
-    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
-    font-size: 1.5em;
+    font-size: 1.2em;
     font-weight: bold;
     padding-left: 0;
 }
 
-.chartBackground {
-    fill: white;
-}
-
-.chartFrame {
-    fill: none;
-    padding-left: 40%;
-    stroke: #999;
-    stroke-width: 5px;
-    shape-rendering: crispEdges;
-}
 
 .axis path,
 .axis line {
