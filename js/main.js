@@ -2,15 +2,32 @@
 (function(){
 
 //pseudo-global variables
-var attrArray = ["HepB", "Hib3", "PAB", "Polio"];
+var attrArray = ["HepB", "Hib3", "PAB", "Polio", "DTP"];
 var expressed = attrArray[0]; //initial attribute
 
+var description; //description of selected variable
+
+// Create global title for each variable
+var title_HepB = "HepB";
+var title_Hib3 = "Hib3";
+var title_PAB = "PAB";
+var title_Polio = "Polio";
+var title_DTP = "DTP"
+
+//Create the description container
+var descriptionDiv;
+
+var desc_HepB = "Hepatitis B is a serious disease caused by a virus that attacks the liver. The virus, which is called hepatitis B virus (HBV), can cause lifelong infection, cirrhosis (scarring) of the liver, liver cancer, liver failure, and death. Hepatitis B vaccine is available for all age groups to prevent HBV infection.";
+var desc_Hib3 = "All countries within the meningitis belt have, since 2000, been introduced to Hib3 vaccines.";
+var desc_PAB = "PAB Neonates protected at birth against neonatal tetanus";
+var desc_Polio = "There are two types of vaccine that protect against polio: inactivated poliovirus vaccine (IPV) and oral poliovirus vaccine (OPV). IPV is given as an injection in the leg or arm, depending on the patient's age.";
+var desc_DTP = "DPT (also DTP and DTwP) refers to a class of combination vaccines against three infectious diseases in humans: diphtheria, pertussis (whooping cough), and tetanus. The vaccine components include diphtheria and tetanus toxoids and killed whole cells of the organism that causes pertussis";
 
 //chart frame dimensions
-var chartWidth = window.innerWidth * 0.425,
-    chartHeight = 473,
-    leftPadding = 25,
-    rightPadding = 2,
+var chartWidth = window.innerWidth * 1,
+    chartHeight = 250,
+    leftPadding = 0,
+    rightPadding = 0,
     topBottomPadding = 5,
     chartInnerWidth = chartWidth - leftPadding - rightPadding,
     chartInnerHeight = chartHeight - topBottomPadding * 2,
@@ -28,7 +45,7 @@ window.onload = setMap();
 function setMap(){
 
 	//map frame dimensions
-    var width = window.innerWidth * .8,
+    var width = window.innerWidth * 1,
         height = 500;
 
     //create new svg container for the map
@@ -73,6 +90,8 @@ function setMap(){
         setChart(csvData, colorScale);
         
         createDropdown(csvData);
+        
+        createDescriptions(csvData);
         
     };
 }; //end of setMap()
@@ -295,6 +314,37 @@ function createDropdown(csvData){
 		.text(function(d){ return d });
 };
 
+function createDescriptions(csvData) {
+
+	descriptionDiv = d3.select("body")
+		.append("div")
+		.attr("class", "descriptionDiv");
+
+	updateDescriptions(csvData);
+}
+
+function updateDescriptions(csvData) {
+	descriptionTitle = descriptionDiv
+		.html(function(d) {
+			if (expressed == "HepB") { return title_HepB+"<br>" }
+			if (expressed == "Hib3") { return title_Hib3+"<br>"; }
+			if (expressed == "PAB") { return title_PAB+"<br>"; }
+			if (expressed == "Polio") { return title_Polio+"<br>"; }
+			if (expressed == "DTP") { return title_DTP+"<br>"; } 
+		})
+		.attr("class", "descriptionTitle");
+
+	description = descriptionDiv.append("text")
+		.html(function(d) { 
+			if (expressed == "HepB") { return desc_HepB; }
+			if (expressed == "Hib3") { return desc_Hib3; }
+			if (expressed == "PAB") { return desc_PAB; }
+			if (expressed == "Polio") { return desc_Polio; }
+			if (expressed == "DTP") { return DTP; } 
+		})
+		.attr("class", "description");
+}
+
 function changeAttribute(attribute, csvData){
     //change the expressed attribute
     expressed = attribute;
@@ -417,5 +467,6 @@ function moveLabel(){
             "top": y + "px"
         });
 };
+
 
 })(); //last line of main.js
