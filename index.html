@@ -6,18 +6,183 @@
 		<title>Meghan Kelly: D3</title>
 
 		<!--put your external stylesheet links here-->
-		<link rel="stylesheet" href="css/style.css"/>
+		<!--put your external stylesheet links here-->
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<link rel="stylesheet" href="css/bootstrap-theme.min.css">
+		<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+		<link rel="stylesheet" href="css/style.css">
 		<!--[if IE<9]>
 			<link rel="stylesheet" href="css/style.ie.css">
 		<![endif]-->
 	</head>
 
 	<body>
-		<h1><strong>Global Vaccinations:</strong></h1>
-		<h2>A UN millenium goal unmet?</h2>
+	
+	<nav class="navbar navbar-default navbar-fixed-top main-navbar navbar navbar-inverse"> <!--Creates navbar-->
+	<div class="container">
+		<div class="navbar-header"> <!--Creates the navbar header-->
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+				<span class="sr-only">Toggle navigation</span> <!--Used for screen readers for accessibility-->
+				<span class="glyphicon glyphicon-menu-hamburger"></span>
+				<span class="menu">Menu</span>
+			</button> <!--Hamburger button for smaller devices-->
 
-		<p>Meghan Meghan Meghan </p>
+		<a class="navbar-brand" href="index.html">Meghan Kelly Cartography</a>
+		</div>
+
+		<div id="navbar" class="collapse navbar-collapse navbar-inverse"> <!--Links in navbar-->
+			<ul class="nav navbar-nav"> <!-- Unordered list for links on navbar -->
+				<li role="presentation"><a href="http://meghankelly-cartography.github.io/">Home</a></li>
+  				<li role="presentation"><a href="http://meghankelly-cartography.github.io/aboutme.html">About Me</a></li>
+  				<li role="presentation" class="active"><a data-toggle="dropdown" class="dropdown-toggle" class="active" href="index.html">Portfolio<span class="caret"></span></a>
+                	<ul class="dropdown-menu">
+                		<li><a href="http://meghankelly-cartography.github.io/portfolio.html" class="active">My Portfolio</a></li>
+                		<li><a href="index.html">Leaflet Interactive</a></li>
+                		<li><a href="http://meghankelly-cartography.github.io/finalproj.html">Final Project</a></li>
+                    	<li><a href="http://meghankelly-cartography.github.io/Syria.html">Infographic: Syria</a></li>
+                    	<li><a href="http://meghankelly-cartography.github.io/Crimea.html">Resources in Crimea</a></li>
+                    	<li><a href="http://meghankelly-cartography.github.io/Terrain.html">Terrain Representation</a></li>
+                    	<li><a href="http://meghankelly-cartography.github.io/DesignChallenge.html">Design Challenge</a></li>
+                    	<li><a href="http://meghankelly-cartography.github.io/Minard1.html">Charles Minard 1</a></li>
+                    	<li><a href="http://meghankelly-cartography.github.io/Minard2.html">Charles Minard 2</a></li>
+                    	<li><a href="http://meghankelly-cartography.github.io/Lynch.html">Kevin Lynch</a></li>
+                    	<li><a href="http://meghankelly-cartography.github.io/MP.html">Margaret Pearce</a></li>
+                	</ul>
+            	</li>
+ 			<li role="presentation"><a href="http://mappingborders.github.io/">Mapping Borders</a></li>
+ 			<li role="presentation"><a href="http://meghankelly-cartography.github.io/resources.html">Resources</a></li>
+			</ul>
+		</div> <!-- end .navbar-collapse -->
+	</div> <!-- end .container -->
+</nav> <!-- end navigation bar -->
+
+<h1 id="title" class="page-header"><strong>Global Immunizations:</strong> A UN millenium goal unmet?</h1>
+
+
+<div id="panel" class="container">
+	<div class="panel-group" id="accordion">
+    	<div class="panel panel-default">
+      		<div class="panel-heading">
+        		<h4 class="panel-title">
+          			<a data-toggle="collapse" data-parent="#accordion" href="#collapse1">UN Millenium Goals <img src="img/down_arrow.png"
+              		alt="Color Legend" />
+              		</a>
+        		</h4>
+      		</div>
+      
+      	<div id="collapse1" class="panel-collapse collapse in">
+        	<div class="panel-body">
+        		<p>Text text text </p>
+        	</div>
+      	</div>
+	</div>
+	    
+    <div class="panel panel-default">
+      	<div class="panel-heading">
+        	<h4 class="panel-title">
+          		<a data-toggle="collapse" data-parent="#accordion" href="#collapse2">Hepititus B
+          		<img src="img/down_arrow.png" alt="Down arrow" /> </a>
+        	</h4>
+      	</div>
+    
+    <div id="collapse2" class="panel-collapse collapse">
+        <div class="panel-body">
+        
+        	<p></p>
+        </div>
+      </div>
+	</div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapse3">HibB
+
+          <img src="img/down_arrow.png"
+              alt="Down arrow" />
+              </a>
+        </h4>
+      </div>
+      <div id="collapse3" class="panel-collapse collapse">
+        <div class="panel-body">
+
+        <p> </p>
+        <img src="img/Color_swatches.png"
+							alt="Color Legend" />
+							</a>
+        <p>Text text text</p>
+        </div>
+      </div>
+      
+      <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapse4">PAB
+          <img src="img/down_arrow.png"
+              alt="Down arrow" />
+              </a>
+        </h4>
+      </div>
+      <div id="collapse4" class="panel-collapse collapse">
+        <div class="panel-body">
+
+        <p> </p>
+        <img src="img/Color_swatches.png"
+							alt="Color Legend" />
+							</a>
+        <p>Text text text</p>
+        </div>
+      </div>
+      
+      
+      <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapse5">Polio
+
+          <img src="img/down_arrow.png"
+              alt="Down arrow" />
+              </a>
+        </h4>
+      </div>
+      <div id="collapse5" class="panel-collapse collapse">
+        <div class="panel-body">
+
+        <p> </p>
+        <img src="img/Color_swatches.png"
+							alt="Color Legend" />
+							</a>
+        <p>Text text text</p>
+        </div>
+      </div>
+      
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapse6">Diphtheria, Pertussis, and Tetanus (DPT)
+
+          <img src="img/down_arrow.png"
+              alt="Down arrow" />
+              </a>
+        </h4>
+      </div>
+      <div id="collapse6" class="panel-collapse collapse">
+        <div class="panel-body">
+
+        <p> </p>
+        <img src="img/Color_swatches.png"
+							alt="Color Legend" />
+							</a>
+        <p>Text text text</p>
+        </div>
+    </div>
+    </div>
+    
+        <p id="sources"> Cartographer: Meghan Kelly<br> Data Sources:</p>
+        
+  </div> 
+		
 		<!--My Libraries-->
+		<script type="text/javascript" src="js/bootstrap.js"></script>
 		<script type="text/javascript" src="lib/d3.min.js"></script>
 		<script type="text/javascript" src="lib/d3-queue.v2.min.js"></script>
 		<script type="text/javascript" src="lib/topojson.v1.min.js"></script>
