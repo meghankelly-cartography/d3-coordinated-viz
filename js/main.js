@@ -2,7 +2,7 @@
 (function(){
 
 //pseudo-global variables
-var attrArray = ["HepB_2014", "Hib3_2014", "PAB_2014", "Polio_2014"];
+var attrArray = ["HepB", "Hib3", "PAB", "Polio"];
 var expressed = attrArray[0]; //initial attribute
 
 
@@ -28,8 +28,8 @@ window.onload = setMap();
 function setMap(){
 
 	//map frame dimensions
-    var width = window.innerWidth * 0.65,
-        height = 1000;
+    var width = window.innerWidth * .8,
+        height = 500;
 
     //create new svg container for the map
     var map = d3.select("body")
@@ -39,7 +39,7 @@ function setMap(){
         .attr("height", height);
 
 	var projection = d3.geo.robinson()
-    	.scale(300)
+    	.scale(120)
     	.translate([width / 2, height / 2])
     	.precision(.1);
         
@@ -97,7 +97,7 @@ function joinData(worldCountries, csvData){
     for (var i=0; i<csvData.length; i++){
     	
         var csvCountry = csvData[i]; //the current region
-        var csvKey = csvCountry.GEOUNIT; //the CSV primary key
+        var csvKey = csvCountry.geounit; //the CSV primary key
 
         //loop through geojson regions to find correct region
         for (var a=0; a<worldCountries.length; a++){
@@ -133,17 +133,26 @@ function setEnumerationUnits(worldCountries, map, path, colorScale){
         .style("fill", function(d){
             return choropleth(d.properties, colorScale);
         })
-        
-        //**not sure what's going on here
         .on("mouseover", function(d){
             highlight(d.properties);
         })
         .on("mouseout", function(d){
             dehighlight(d.properties);
         })
+        
+        .on("mousemove", moveLabel);
+        
         //add style descriptor to each path
     	var desc = countries.append("desc")
-        	.text('{"stroke": "#000", "stroke-width": "0.5px"}');
+        	.text("fill", function(d) {
+	 			return choropleth(d, colorScale);
+	 	});
+        	
+        	//.text('{"fill": "none"}');
+
+//         	.text("fill": function(d) {
+// 					return choropleth(d.properties, colorScale);
+// 				});
     };
 
 //function to create color scale generator
@@ -211,17 +220,25 @@ function setChart(csvData, colorScale){
             return b[expressed]-a[expressed]
         })
         .attr("class", function(d){
-            return "bar " + d.GEOUNIT;
+            return "bar " + d.geounit;
         })
         .attr("width", chartInnerWidth / csvData.length - 1)
-        
-        //**not sure what's going on here
         .on("mouseover", highlight)
         .on("mouseout", dehighlight)
+        .on("mousemove", moveLabel);
+
         
-        //**not sure what's going on here
-        var desc = bars.append("desc")
-        	.text('{"stroke": "none", "stroke-width": "0px"}');
+    //**not sure what's going on here
+    var desc = bars.append("desc")
+        .text("fill", function(d) {
+	 		return choropleth(d, colorScale);
+	 	});
+	 	
+	 	//.text('{"fill": "none"}');
+
+			// .text("fill": function(d) {
+// 					return choropleth(d.properties, colorScale);
+// 				});        
         
     //create a text element for the chart title
     var chartTitle = chart.append("text")
@@ -286,7 +303,7 @@ function changeAttribute(attribute, csvData){
     var colorScale = makeColorScale(csvData);
 
     //recolor enumeration units
-    var regions = d3.selectAll(".countries")
+    var countries = d3.selectAll(".countries")
     	.transition()
         .duration(500)
         .style("fill", function(d){
@@ -299,6 +316,7 @@ function changeAttribute(attribute, csvData){
         .sort(function(a, b){
             return b[expressed] - a[expressed]
         });
+        
 // Animate chart
 //         .transition() //add animation
 //         .delay(function(d, i){
@@ -335,24 +353,22 @@ function updateChart(bars, n, colorScale){
 //function to highlight enumeration units and bars
 function highlight(props){
     //change stroke
-    var selected = d3.selectAll("." + props.GEOUNIT)
+    var selected = d3.selectAll("." + props.geounit)
         .style({
-            //"stroke": "#DD1C77",
             "fill": "#980043",
-            //"stroke-width": "2"
         });
+        
+    setLabel(props);
+
 };
 
 //function to reset the element style on mouseout
 function dehighlight(props){
-    var selected = d3.selectAll("." + props.GEOUNIT)
+    var selected = d3.selectAll("." + props.geounit)
         .style({
-            "stroke": function(){
-                return getStyle(this, "stroke")
+            "fill": function(){
+                return getStyle(this, "fill")
             },
-            "stroke-width": function(){
-                return getStyle(this, "stroke-width")
-            }
         });
 
     function getStyle(element, styleName){
@@ -360,10 +376,46 @@ function dehighlight(props){
             .select("desc")
             .text();
 
-        var styleObject = JSON.parse(styleText);
-
-        return styleObject[styleName];
+//         var styleObject = JSON.parse(styleText);
+// 
+//         return styleObject[styleName];
     };
+    
+    d3.select(".infolabel")
+        .remove();
+};
+
+//function to create dynamic label
+function setLabel(props){
+    //label content
+    var labelAttribute = "<h3>" + props[expressed] +
+        "</h3>";
+
+    //create info label div
+    var infolabel = d3.select("body")
+        .append("div")
+        .attr({
+            "class": "infolabel",
+            "id": props.geounit + "_label"
+        })
+        .html(labelAttribute);
+
+    var regionName = infolabel.append("div")
+        .attr("class", "labelname")
+        .html(props.geounit);
+};
+
+//function to move info label with mouse
+function moveLabel(){
+    //use coordinates of mousemove event to set label coordinates
+    var x = d3.event.clientX + 10,
+        y = d3.event.clientY - 75;
+
+    d3.select(".infolabel")
+        .style({
+            "left": x + "px",
+            "top": y + "px"
+        });
 };
 
 })(); //last line of main.js
