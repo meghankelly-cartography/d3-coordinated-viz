@@ -2,7 +2,7 @@
 (function(){
 
 //pseudo-global variables
-var attrArray = ["HepB", "Hib3", "PAB", "Polio", "DTP"];
+var attrArray = ["Polio", "HepB", "Hib3", "PAB", "DTP"];
 var expressed = attrArray[0]; //initial attribute
 
 //chart frame dimensions
@@ -134,7 +134,6 @@ function setEnumerationUnits(worldCountries, map, path, colorScale){
 //function to create color scale generator
 function makeColorScale(data){
     var colorClasses = [
-        "#eff3ff",
         "#bdd7e7",
         "#6baed6",
         "#3182bd",
@@ -201,13 +200,7 @@ function setChart(csvData, colorScale){
     var desc = bars.append("desc")
         .text("fill", function(d) {
 	 		return choropleth(d, colorScale);
-	 	});
-	 	
-	 	//.text('{"fill": "none"}');
-
-			// .text("fill": function(d) {
-// 					return choropleth(d.properties, colorScale);
-// 				});        
+	 	});       
         
     //create a text element for the chart title
     var chartTitle = chart.append("text")
@@ -282,13 +275,6 @@ function changeAttribute(attribute, csvData){
         .sort(function(a, b){
             return b[expressed] - a[expressed]
         });
-        
-// Animate chart
-//         .transition() //add animation
-//         .delay(function(d, i){
-//             return i * 20
-//         })
-//         .duration(500);
 
     updateChart(bars, csvData.length, colorScale);
 };
@@ -313,7 +299,7 @@ function updateChart(bars, n, colorScale){
         
         //at the bottom of updateChart()...add text to chart title
     var chartTitle = d3.select(".chartTitle")
-     	.text("Number of  " + expressed + " vaccinations by country");
+     	.text("Rate of  " + expressed + " Immunizations by Country");
 };
 
 //function to highlight enumeration units and bars
@@ -372,6 +358,5 @@ function moveLabel(){
             "top": y + "px"
         });
 };
-
 
 })(); //last line of main.js

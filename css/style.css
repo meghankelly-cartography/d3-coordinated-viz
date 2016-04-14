@@ -85,7 +85,7 @@ p {
    font-weight: 300;
    color: gray;
    line-height: 200%;
-   padding-left: 5%;
+   padding-left: 3%;
 }
 
 .title {
@@ -97,7 +97,7 @@ p {
 .dropdown {
     position: absolute;
     top: 28%;
-    left: 80%;
+    left: 82%;
     z-index: 10;
     font-family: sans-serif;
     font-size: 1em;
@@ -139,9 +139,8 @@ option {
     fill: black;
     font-size: 1.2em;
     font-weight: bold;
-    padding-left: 0;
+    padding-left: 40%;
 }
-
 
 .axis path,
 .axis line {
@@ -176,37 +175,4 @@ option {
     padding: 0;
     display: inline-block;
     line-height: 1em;
-}
-
-.descriptionDiv {
-	height: 1000px;
-	width: 200px;
-	padding-top: 0px;
-	position: absolute;
-	padding-bottom: 90%;
-}
-
-.descriptionTitle {
-	margin-top: 0px;
-	margin-bottom: 500px;
-	width: 200px;
-    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
-	font-size:20px;
-	font-weight: normal; 
-	color:black;
-	position: absolute;
-	padding-left: 5%;
-
-}
-
-.description {
-	margin-top: 0px;
-    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
-	color: black;
-	word-wrap: break-word;
-	font-size:16px;
-	color: black;
-	line-height: 13px;
-	padding-left: 5%;
-	position: absolute;
 }
