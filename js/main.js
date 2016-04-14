@@ -2,12 +2,12 @@
 (function(){
 
 //pseudo-global variables
-var attrArray = ["Polio", "HepB", "Hib3", "PAB", "DTP"];
+var attrArray = ["Polio", "MCV","HepB", "Hib3", "DTP"];
 var expressed = attrArray[0]; //initial attribute
 
 //chart frame dimensions
 var chartWidth = window.innerWidth * .8,
-    chartHeight = 200;
+    chartHeight = 300;
     leftPadding = 0,
     rightPadding = 0,
     topBottomPadding = 5,
@@ -121,7 +121,6 @@ function setEnumerationUnits(worldCountries, map, path, colorScale){
         .on("mouseout", function(d){
             dehighlight(d.properties);
         })
-        
         .on("mousemove", moveLabel)
         
         //add style descriptor to each path
@@ -134,6 +133,7 @@ function setEnumerationUnits(worldCountries, map, path, colorScale){
 //function to create color scale generator
 function makeColorScale(data){
     var colorClasses = [
+        "#eff3ff",
         "#bdd7e7",
         "#6baed6",
         "#3182bd",
@@ -195,7 +195,6 @@ function setChart(csvData, colorScale){
         .on("mouseout", dehighlight)
         .on("mousemove", moveLabel);
 
-        
     //**not sure what's going on here
     var desc = bars.append("desc")
         .text("fill", function(d) {
@@ -206,8 +205,7 @@ function setChart(csvData, colorScale){
     var chartTitle = chart.append("text")
         .attr("x", 20)
         .attr("y", 40)
-        .attr("class", "chartTitle")
-        .text(" " + expressed + " Vaccinations by Country");
+        .attr("class", "chartTitle");
         
     //create vertical axis generator
     var yAxis = d3.svg.axis()
@@ -297,7 +295,7 @@ function updateChart(bars, n, colorScale){
             return choropleth(d, colorScale);
         });
         
-        //at the bottom of updateChart()...add text to chart title
+        //add text to chart title
     var chartTitle = d3.select(".chartTitle")
      	.text("Rate of  " + expressed + " Immunizations by Country");
 };
@@ -329,7 +327,7 @@ function dehighlight(props){
 //function to create dynamic label
 function setLabel(props){
     //label content
-    var labelAttribute = "<h3>" + props[expressed] +
+    var labelAttribute = "<h3>" + props[expressed] + "%"
         "</h3>";
 
     //create info label div

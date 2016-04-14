@@ -31,7 +31,7 @@
 
 #title{
 	padding-left:30px;
-	padding-top:50px;
+	padding-top:45px;
 }
 
 #title_p{
@@ -161,10 +161,9 @@ option {
     position: absolute;
     text-align: center;
     min-height: 70px;
-    min-width: 100px;
-    color: #fff;
-    background-color: rgba(51,51,51,.85);
-    border: solid thin black;
+    min-width: 110px;
+    color: #efeff0;
+    background-color: rgba(51,51,51,.95);
     padding: 0;
     padding-bottom: 1px;
     top: -75px;
